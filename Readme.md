@@ -1,9 +1,6 @@
 Command Line Dictionary Tool
 
-Requirements
-The command line tool should have following functions - 
-The output should be nicely formatted on console, and show all relevant information.
-
+VALID COMMANDS
 1. Word Definitions
 	Display definitions of a word. 
 	./dict def <word>
@@ -47,4 +44,7 @@ The output should be nicely formatted on console, and show all relevant informat
 				OR Display another synonym of the word
 		-3 quit
 			Display the word, its full dict, and quit
-			
+
+Here we are using inquirer module to enter questions and answers
+Oxford Dictionary API is been used for this assignment
+This dictionary API does not have random word API so I am using an array of random words.
