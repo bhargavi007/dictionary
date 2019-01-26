@@ -3,7 +3,7 @@ api key  : "fd3e8c9208f8cf3b776b2baa4a0da788"
 app id   : "7f1e83f1"
 base url : "https://od-api.oxforddictionaries.com/api/v1"
 
-oxford dictionary API end points
+*****oxford dictionary API end points*****
 
 GET /entiries/{source_language}/{word_id}          -- defination
 GET /entiries/{source_language}/{word_id}/synonyms -- synonyms
@@ -18,12 +18,25 @@ var request = require('request');
 var app_id = "7f1e83f1";
 var app_key = "fd3e8c9208f8cf3b776b2baa4a0da788";
 var randomWords = ["protect","eat","drink","soft","ability","absolute","present","plant","minute","place","order","eye","dashing","voiceless","embarrass","question","ubiquitous","calendar"];
+var playWords = ["unable","design","stem","prose","well-made","ear","kick","current","waggish","jump","throat","rapid","kindhearted","helpful","fence","abortive","healthy","purring","cagey","degree","hapless","look","pest","risk","fog","fold","join","delay","combative"];
 
 var questions = [{
   type: 'input',
   name: 'command',
   message: "Enter the Command",
-}]
+}];
+
+var playQuestions = [{
+  type: 'input',
+  name: 'answer',
+  message: "Enter the Word",
+}];
+
+var hints = [{
+  type: 'input',
+  name: 'hint',
+  message: "Choose\n1. try again \n2. hint \n3. quit \n",
+}];
 
 
 var commands = {
@@ -36,6 +49,26 @@ var commands = {
 	"./dict play":"game"
 };
 
+ask();
+
+function enterAnswer(){
+	return new Promise( function (resolve, reject){
+	 	inquirer.prompt(playQuestions).then(answers => {
+	 		var input = `${answers['answer']}`;
+	 		resolve(input);
+	 	});
+	});
+}
+
+function chooseHints(){
+	return new Promise( function (resolve, reject){
+	 	inquirer.prompt(hints).then(answers => {
+	 		var input = `${answers['hint']}`;
+	 		resolve(input);
+	 	});
+	});
+}
+
 function ask() {
   inquirer.prompt(questions).then(answers => {
     var input = `${answers['command']}`;
@@ -47,10 +80,8 @@ function ask() {
 	}
 	else{
 		var word = input.split(" ").pop();
-
 		var lastIndex = input.lastIndexOf(" ");
 		var functionString = input.substring(0, lastIndex);
-		console.log(word,functionString);
 
 		if(commands[functionString]){
 			var wordFunction = commands[functionString];
@@ -91,9 +122,6 @@ function ask() {
 	}
   });
 }
-
-ask();
-
 
 function defination(word){
 	console.log("**** Defination of word ******");
@@ -287,4 +315,84 @@ function wordOfTheDay(){
 	var word = randomWords[randomNumber];
 	console.log("Word of the Day is ",word);
 	details(word);
+}
+
+function game(){
+	console.log("Find the word")
+	var randomNumber = Math.floor(Math.random()*playWords.length);
+	var word = playWords[randomNumber];
+	defination(word).then(function(resp){
+		if(resp[0]){
+			console.log(resp[0]);
+		}
+		synonym(word).then(function(resp){
+			var synonymsArr = resp;
+			if(resp[0]){
+				console.log(resp[0]);
+			}
+			antonym(word).then(function(resp){
+				if(resp[0]){
+					console.log(resp[0]);
+				}
+				enterAnswer().then(function(ans){
+					if(synonymsArr.indexOf(ans) != -1 && ans != synonymsArr[0]){
+						console.log("The word is correct");
+					}
+					else{
+						console.log("Try Again");
+						chooseHints().then(function(hint){
+							if(hint == "1"){
+								enterAnswer().then(function(ans){
+									if(synonymsArr.indexOf(ans) != -1 && ans != synonymsArr[0]){
+										console.log("The word is correct");
+										ask();
+									}
+									else{
+										console.log("The game ends");
+										ask();
+									}
+								});
+							}
+							else if(hint == "2"){
+								JumbleWord(word).then(function(jumble){
+									console.log("The scrambled word is",jumble);
+									enterAnswer().then(function(ans){
+										if(ans == word){
+											console.log("The word is correct");
+											ask();
+										}
+										else{
+											console.log("The game ends");
+											ask();
+										}
+									});
+								});
+							}
+							else if(hint == "3"){
+								console.log("The word is",word);
+								console.log("The game ends");
+								ask();
+							}
+							else{
+								ask();
+							}
+						})
+					}
+				});
+			});
+		});
+	});
+}
+
+function JumbleWord(word){
+	return new Promise( function (resolve, reject){
+		var letter = word;
+		var jumbledWord = "";
+		for (var i = 0; i < word.length; i++) {
+		    var Chindex = Math.floor(Math.random() * letter.length);
+		    jumbledWord = jumbledWord + letter.charAt(Chindex);
+		    letter = letter.substr(0, Chindex) + letter.substr(Chindex + 1);
+		}
+		resolve(jumbledWord);
+	});
 }
